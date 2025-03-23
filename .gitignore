@@ -1,0 +1,11 @@
+
+# FVM Version Cache
+.fvm/
+
+build
+.env
+/.dart_tool
+.DS_Store
+/.flutter-plugins
+/.flutter-plugins-dependencies
+/.idea

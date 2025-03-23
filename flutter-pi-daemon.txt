@@ -1,0 +1,17 @@
+[Unit]
+Description=Flutter Pi Daemon
+After=network.target
+
+[Service]
+User=rebecca
+Group=rebecca
+WorkingDirectory=/home/rebecca/flutter_pi
+Environment=""
+ExecStart=/bin/bash -c '/usr/local/bin/flutter-pi  --release /home/rebecca/flutter_pi'
+Restart=always
+RestartSec=5
+StandardOutput=append:/var/log/flutter-pi-daemon.log
+StandardError=append:/var/log/flutter-pi-daemon.log
+
+[Install]
+WantedBy=multi-user.target
