@@ -1,0 +1,10 @@
+[Unit]
+Description=Librespot (Spotify Connect)
+After=sound.target network.target
+
+[Service]
+ExecStart=/usr/bin/librespot --name "Rebecca's Office" --backend pulseaudio
+Restart=always
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,17 @@
+[Unit]
+Description=Bluetooth Connection Daemon
+After=network.target
+
+[Service]
+User=rebecca
+Group=rebecca
+WorkingDirectory=/home/rebecca/flutter_pi
+Environment=""
+ExecStart=/bin/bash -c 'sudo bluetoothctl connect 08:F0:B6:98:1E:04 && paplay /usr/share/sounds/alsa/Front_Center.wav'
+Restart=always
+RestartSec=5
+StandardOutput=append:/var/log/bluetooth-connection-daemon.log
+StandardError=append:/var/log/bluetooth-connection-daemon.log
+
+[Install]
+WantedBy=multi-user.target
