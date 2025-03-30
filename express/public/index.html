@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spotify Authorization Code Flow Example</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      .text-overflow {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+    </style>
+  </head>
+
+  <body class="bg-gray-100 text-gray-800">
+    <div class="container mx-auto px-4 py-8">
+      <!-- Login Section -->
+      <div id="login" class="hidden text-center">
+        <h1 class="text-3xl font-bold mb-6">Spotify Authorization Code Flow</h1>
+        <a href="/login" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded">
+          Log in with Spotify
+        </a>
+      </div>
+
+      <!-- Logged In Section -->
+      <div id="loggedin" class="hidden">
+        <div id="user-profile" class="bg-white shadow-md rounded-lg p-6 mb-6"></div>
+        <div id="oauth" class="bg-white shadow-md rounded-lg p-6 mb-6"></div>
+        <button id="obtain-new-token" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">
+          Obtain New Token
+        </button>
+      </div>
+    </div>
+
+    <script>
+      (function () {
+        /**
+         * Parse URL hash parameters
+         * @returns {Object} Parsed parameters
+         */
+        const getHashParams = () => {
+          return window.location.hash
+            .substring(1)
+            .split('&')
+            .reduce((params, param) => {
+              const [key, value] = param.split('=');
+              params[key] = decodeURIComponent(value);
+              return params;
+            }, {});
+        };
+
+        const params = getHashParams();
+        const accessToken = params.access_token;
+        const refreshToken = params.refresh_token;
+        const error = params.error;
+
+        const loginSection = document.getElementById('login');
+        const loggedInSection = document.getElementById('loggedin');
+        const userProfilePlaceholder = document.getElementById('user-profile');
+        const oauthPlaceholder = document.getElementById('oauth');
+
+        if (error) {
+          alert('There was an error during authentication');
+        } else if (accessToken) {
+          // Render OAuth info
+          oauthPlaceholder.innerHTML = `
+            <h2 class="text-xl font-bold mb-4">OAuth Info</h2>
+            <dl class="grid grid-cols-2 gap-4">
+              <dt class="font-semibold">Access Token</dt>
+              <dd class="text-overflow">${accessToken}</dd>
+              <dt class="font-semibold">Refresh Token</dt>
+              <dd class="text-overflow">${refreshToken}</dd>
+            </dl>
+          `;
+
+          // Fetch user profile
+          fetch('https://api.spotify.com/v1/me', {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              userProfilePlaceholder.innerHTML = `
+                <h1 class="text-2xl font-bold mb-4">Logged in as ${data.display_name}</h1>
+                <div class="flex items-center">
+                  <img class="w-24 h-24 rounded-full mr-4" src="${data.images?.[0]?.url || ''}" alt="Profile Image">
+                  <div>
+                    <dl class="grid grid-cols-2 gap-4">
+                      <dt class="font-semibold">Display Name</dt>
+                      <dd>${data.display_name}</dd>
+                      <dt class="font-semibold">Email</dt>
+                      <dd>${data.email || 'N/A'}</dd>
+                      <dt class="font-semibold">Country</dt>
+                      <dd>${data.country}</dd>
+                    </dl>
+                  </div>
+                </div>
+              `;
+              loginSection.classList.add('hidden');
+              loggedInSection.classList.remove('hidden');
+            })
+            .catch((err) => console.error('Error fetching user profile:', err));
+        } else {
+          // Show login screen
+          loginSection.classList.remove('hidden');
+          loggedInSection.classList.add('hidden');
+        }
+
+        // Handle refresh token button click
+        document.getElementById('obtain-new-token').addEventListener('click', () => {
+          fetch('/refresh_token', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ refresh_token: refreshToken }),
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              oauthPlaceholder.innerHTML = `
+                <h2 class="text-xl font-bold mb-4">OAuth Info</h2>
+                <dl class="grid grid-cols-2 gap-4">
+                  <dt class="font-semibold">Access Token</dt>
+                  <dd class="text-overflow">${data.access_token}</dd>
+                  <dt class="font-semibold">Refresh Token</dt>
+                  <dd class="text-overflow">${refreshToken}</dd>
+                </dl>
+              `;
+            })
+            .catch((err) => console.error('Error refreshing token:', err));
+        });
+      })();
+    </script>
+  </body>
+</html>

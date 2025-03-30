@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_pi/services/spotify_play_service.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -10,6 +11,7 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   String greeting = dotenv.env['GREETING'] ?? 'Hello, World!';
+  final SpotifyPlayService playService = SpotifyPlayService();
 
   void changeGreeting() {
     setState(() {
@@ -26,30 +28,72 @@ class _HomeState extends State<Home> {
 
   @override
   Widget build(BuildContext context) {
+    print('Build Home');
     return Scaffold(
       backgroundColor: const Color.fromARGB(255, 155, 175, 192),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              greeting,
-              style: const TextStyle(color: Colors.white, fontSize: 84),
-              textAlign: TextAlign.center,
+      body: Stack(
+        children: [
+          // Main content
+          Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  greeting,
+                  style: const TextStyle(color: Colors.white, fontSize: 84),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: changeGreeting,
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 16.0),
+                  ),
+                  child: const Text(
+                    'Push Me!',
+                    style: TextStyle(fontSize: 24),
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: changeGreeting,
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 16.0),
-              ),
-              child: const Text(
-                'Push Me!', 
-                style: TextStyle(fontSize: 24),
-              ),
+          ),
+
+          // Bottom-right buttons
+          Positioned(
+            bottom: 20,
+            right: 20,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  onPressed: playService.previousTrack,
+                  icon: const Icon(Icons.skip_previous),
+                  color: Colors.white,
+                  iconSize: 46,
+                ),
+                IconButton(
+                  onPressed: () => playService.playTrack(null),
+                  icon: const Icon(Icons.play_arrow),
+                  color: Colors.white,
+                  iconSize: 46,
+                ),
+                IconButton(
+                  onPressed: playService.pauseTrack,
+                  icon: const Icon(Icons.pause),
+                  color: Colors.white,
+                  iconSize: 46,
+                ),
+                IconButton(
+                  onPressed: playService.nextTrack,
+                  icon: const Icon(Icons.skip_next),
+                  color: Colors.white,
+                  iconSize: 46,
+                ),
+                
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
