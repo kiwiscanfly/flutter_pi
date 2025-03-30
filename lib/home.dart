@@ -30,7 +30,7 @@ class _HomeState extends State<Home> {
   Widget build(BuildContext context) {
     print('Build Home');
     return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 155, 175, 192),
+      backgroundColor: const Color.fromARGB(255, 0, 0, 0),
       body: Stack(
         children: [
           // Main content
@@ -65,6 +65,27 @@ class _HomeState extends State<Home> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
+                IconButton(
+                  onPressed: () => {
+                    playService.getDevices().then((devices) {
+                      for (var device in devices) {
+                        print('Device: ${device.name}, ID: ${device.id}');
+                        if (device.name == dotenv.env['SPEAKER_NAME']) {
+                          playService.transferPlayback(device.id).then((_) {
+                            print('Playback transferred to ${device.name}');
+                          }).catchError((error) {
+                            print('Error transferring playback: $error');
+                          });
+                        }
+                      }
+                    }).catchError((error) {
+                      print('Error fetching devices: $error');
+                    })
+                  },
+                  icon: const Icon(Icons.speaker),
+                  color: Colors.white,
+                  iconSize: 46,
+                ),
                 IconButton(
                   onPressed: playService.previousTrack,
                   icon: const Icon(Icons.skip_previous),

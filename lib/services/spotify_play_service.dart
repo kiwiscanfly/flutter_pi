@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter_pi/services/spotify_token_service.dart';
+import 'package:flutter_pi/models/spotify_device_model.dart';
 import 'package:http/http.dart' show Client;
 
 class SpotifyPlayService {
@@ -27,6 +28,7 @@ class SpotifyPlayService {
     final headers = await _getHeaders();
     final encodedBody = body != null ? jsonEncode(body) : null;
 
+    print('Making $method request to $url with headers: $headers and body: $encodedBody');
     final response = method == 'PUT'
         ? await client.put(url, headers: headers, body: encodedBody)
         : await client.post(url, headers: headers, body: encodedBody);
@@ -57,5 +59,37 @@ class SpotifyPlayService {
   
   Future<void> previousTrack() async {
     await _makeRequest('previous', 'POST');
+  }
+
+  Future<List<SpotifyDeviceModel>> getDevices() async {
+    final url = Uri.parse('$_baseUrl/devices');
+    final headers = await _getHeaders();
+    final response = await client.get(url, headers: headers);
+
+    if (response.statusCode == 200) {
+      final List<dynamic> devicesJson = jsonDecode(response.body)['devices'];
+      return devicesJson.map((device) => SpotifyDeviceModel.fromJson(device)).toList();
+    } else {
+      print('Failed to fetch devices: ${response.statusCode} - ${response.body}');
+      throw Exception('Error fetching devices');
+    }
+  }
+
+  Future<void> transferPlayback(String deviceId) async {
+    final url = Uri.parse(_baseUrl);
+    print('Transferring playback to device ID: $deviceId / URL: $url');
+    final headers = await _getHeaders();
+    final response = await client.put(
+      url,
+      headers: headers, 
+      body: jsonEncode({'device_ids': [deviceId], 'play': true}),
+    );
+    print(response.body);
+    if (response.statusCode == 204) {
+      print('Playback transferred successfully.');
+    } else {
+      print('Failed to transfer playback: ${response.statusCode} - ${response.body}');
+      throw Exception('Error transferring playback');
+    }
   }
 }
